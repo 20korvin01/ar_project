@@ -21,10 +21,20 @@
         <button type="button" data-mode="mobile">Mobile</button>
       </div>
     </div>
+    <div>
+      <label for="land-class">Land class</label><br>
+      <div class="land-class-row">
+        <div class="select-with-chip">
+          <span class="color-chip" id="land-class-chip" aria-hidden="true"></span>
+          <select id="land-class"></select>
+        </div>
+      </div>
+    </div>
     <div class="note" id="note"></div>
   </div>
   <iframe id="viewer" allow="camera; geolocation; autoplay; fullscreen"></iframe>
 </div>
+<script src="./colors.js" defer></script>
 <script src="./js/main.js" defer></script>
 </body>
 </html>

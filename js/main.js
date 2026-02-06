@@ -10,8 +10,14 @@ const yearSelect = document.getElementById("year");
 const viewer = document.getElementById("viewer");
 const note = document.getElementById("note");
 const modeButtons = Array.from(document.querySelectorAll(".mode button"));
+const landClassSelect = document.getElementById("land-class");
+const landClassChip = document.getElementById("land-class-chip");
+const landClassSearch = document.getElementById("land-class-search");
+const landClassLegendTitle = document.getElementById("land-class-legend-title");
+const landClassLegendDesc = document.getElementById("land-class-legend-desc");
 
 let mode = "auto";
+let landClassCache = [];
 
 function isMobile() {
   return window.matchMedia("(max-width: 900px)").matches ||
@@ -68,12 +74,81 @@ function populateYears() {
   yearSelect.value = scenes[0].year;
 }
 
+function updateLandClassChip() {
+  if (!landClassSelect || !landClassChip) return;
+  const selected = landClassSelect.options[landClassSelect.selectedIndex];
+  const color = selected ? selected.dataset.color : null;
+  landClassChip.style.backgroundColor = color || "transparent";
+  landClassChip.style.borderColor = color ? "#777" : "#bbb";
+}
+
+function updateLandClassLegend() {
+  if (!landClassSelect || !landClassLegendTitle || !landClassLegendDesc) return;
+  const selected = landClassSelect.options[landClassSelect.selectedIndex];
+  if (!selected || selected.value === "all") {
+    landClassLegendTitle.textContent = "All classes";
+    landClassLegendDesc.textContent = "Showing all land cover classes.";
+    return;
+  }
+
+  const code = Number.parseInt(selected.value, 10);
+  const item = landClassCache.find(entry => entry.code === code);
+  landClassLegendTitle.textContent = selected.textContent || "";
+  landClassLegendDesc.textContent = item && item.category ? item.category : "";
+}
+
+function buildLandClassOptions(filterText) {
+  if (!landClassSelect) return;
+  const query = (filterText || "").trim().toLowerCase();
+  const previousValue = landClassSelect.value;
+
+  landClassSelect.innerHTML = "";
+  const allOption = document.createElement("option");
+  allOption.value = "all";
+  allOption.textContent = "All classes";
+  landClassSelect.appendChild(allOption);
+
+  landClassCache.forEach(item => {
+    const haystack = `${item.land_cover} ${item.code} ${item.category || ""}`.toLowerCase();
+    if (query && !haystack.includes(query)) return;
+    const option = document.createElement("option");
+    option.value = String(item.code);
+    option.textContent = `${item.land_cover} (${item.code})`;
+    option.dataset.color = item.color;
+    if (item.category) option.title = item.category;
+    landClassSelect.appendChild(option);
+  });
+
+  const hasPrevious = Array.from(landClassSelect.options).some(opt => opt.value === previousValue);
+  landClassSelect.value = hasPrevious ? previousValue : "all";
+  updateLandClassChip();
+  updateLandClassLegend();
+}
+
+function populateLandClasses() {
+  if (!landClassSelect) return;
+  landClassCache = Array.isArray(window.NLCD_COLORS) ? window.NLCD_COLORS : [];
+  buildLandClassOptions(landClassSearch ? landClassSearch.value : "");
+}
+
 modeButtons.forEach(btn => {
   btn.addEventListener("click", () => setMode(btn.dataset.mode));
 });
 
 yearSelect.addEventListener("change", loadSelected);
+if (landClassSelect) {
+  landClassSelect.addEventListener("change", () => {
+    updateLandClassChip();
+    updateLandClassLegend();
+  });
+}
+if (landClassSearch) {
+  landClassSearch.addEventListener("input", () => {
+    buildLandClassOptions(landClassSearch.value);
+  });
+}
 window.addEventListener("resize", () => { if (mode === "auto") loadSelected(); });
 
 populateYears();
+populateLandClasses();
 loadSelected();
