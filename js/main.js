@@ -8,7 +8,6 @@ const scenes = [
 
 const yearSelect = document.getElementById("year");
 const viewer = document.getElementById("viewer");
-const openBtn = document.getElementById("open");
 const note = document.getElementById("note");
 const modeButtons = Array.from(document.querySelectorAll(".mode button"));
 
@@ -68,12 +67,6 @@ function populateYears() {
   });
   yearSelect.value = scenes[0].year;
 }
-
-openBtn.addEventListener("click", () => {
-  const scene = getScene(yearSelect.value);
-  const file = pickFile(scene);
-  if (file) window.open(file, "_blank");
-});
 
 modeButtons.forEach(btn => {
   btn.addEventListener("click", () => setMode(btn.dataset.mode));

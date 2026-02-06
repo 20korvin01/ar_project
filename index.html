@@ -7,9 +7,8 @@
 <link rel="stylesheet" href="./css/styles.css">
 </head>
 <body>
-<header>
-  <h1>NLCD 3D Scenes</h1>
-  <div class="controls">
+<div id="frameWrap">
+  <div class="viewer-controls" role="region" aria-label="Viewer controls">
     <div>
       <label for="year">Year</label><br>
       <select id="year"></select>
@@ -22,21 +21,10 @@
         <button type="button" data-mode="mobile">Mobile</button>
       </div>
     </div>
-    <div>
-      <label>Open</label><br>
-      <button type="button" id="open">Open in new tab</button>
-    </div>
     <div class="note" id="note"></div>
   </div>
-</header>
-
-<div id="frameWrap">
   <iframe id="viewer" allow="camera; geolocation; autoplay; fullscreen"></iframe>
 </div>
-
-<footer>
-  Local/offline usage should work, but some browsers restrict camera/geolocation on file URLs.
-</footer>
 <script src="./js/main.js" defer></script>
 </body>
 </html>
