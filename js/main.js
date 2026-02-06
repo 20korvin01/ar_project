@@ -18,6 +18,22 @@ const landClassLegendDesc = document.getElementById("land-class-legend-desc");
 
 let mode = "auto";
 let landClassCache = [];
+const landClassHighlightTolerance = 0.18;
+
+function sendLandClassHighlight() {
+  if (!viewer || !viewer.contentWindow || !landClassSelect) return;
+
+  const selected = landClassSelect.options[landClassSelect.selectedIndex];
+  const enabled = selected && selected.value !== "all";
+  const color = selected ? selected.dataset.color : null;
+
+  viewer.contentWindow.postMessage({
+    type: "nlcd:highlight",
+    enabled: Boolean(enabled && color),
+    color: color || null,
+    tolerance: landClassHighlightTolerance
+  }, "*");
+}
 
 function isMobile() {
   return window.matchMedia("(max-width: 900px)").matches ||
@@ -140,6 +156,7 @@ if (landClassSelect) {
   landClassSelect.addEventListener("change", () => {
     updateLandClassChip();
     updateLandClassLegend();
+    sendLandClassHighlight();
   });
 }
 if (landClassSearch) {
@@ -148,6 +165,9 @@ if (landClassSearch) {
   });
 }
 window.addEventListener("resize", () => { if (mode === "auto") loadSelected(); });
+viewer.addEventListener("load", () => {
+  sendLandClassHighlight();
+});
 
 populateYears();
 populateLandClasses();
