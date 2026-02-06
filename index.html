@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>NLCD Viewer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+<header>
+  <h1>NLCD 3D Scenes</h1>
+  <div class="controls">
+    <div>
+      <label for="year">Year</label><br>
+      <select id="year"></select>
+    </div>
+    <div>
+      <label>Mode</label><br>
+      <div class="mode" role="group" aria-label="Mode">
+        <button type="button" data-mode="auto" class="active">Auto</button>
+        <button type="button" data-mode="desktop">Desktop</button>
+        <button type="button" data-mode="mobile">Mobile</button>
+      </div>
+    </div>
+    <div>
+      <label>Open</label><br>
+      <button type="button" id="open">Open in new tab</button>
+    </div>
+    <div class="note" id="note"></div>
+  </div>
+</header>
+
+<div id="frameWrap">
+  <iframe id="viewer" allow="camera; geolocation; autoplay; fullscreen"></iframe>
+</div>
+
+<footer>
+  Local/offline usage should work, but some browsers restrict camera/geolocation on file URLs.
+</footer>
+<script src="./js/main.js" defer></script>
+</body>
+</html>
