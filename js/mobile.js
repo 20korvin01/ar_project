@@ -168,6 +168,53 @@ function init() {
 	});
 }
 
+// --- AR pinch-to-scale for mobile: allow two-finger pinch to move camera forward/back ---
+var _arPinch = {
+	startDist: 0,
+	startZ: 0,
+	enabled: false
+};
+
+function _touchDistance(touches) {
+	var dx = touches[0].pageX - touches[1].pageX;
+	var dy = touches[0].pageY - touches[1].pageY;
+	return Math.sqrt(dx * dx + dy * dy);
+}
+
+function _onARTouchStart(evt) {
+	if (!ARMode) return;
+	if (evt.touches && evt.touches.length === 2) {
+		_arPinch.startDist = _touchDistance(evt.touches);
+		_arPinch.startZ = app.camera.position.z;
+		_arPinch.enabled = true;
+		evt.preventDefault(); // prevent browser pinch-zoom
+	}
+}
+
+function _onARTouchMove(evt) {
+	if (!ARMode || !_arPinch.enabled) return;
+	if (evt.touches && evt.touches.length === 2) {
+		var cur = _touchDistance(evt.touches);
+		if (_arPinch.startDist <= 0) return;
+		var scale = cur / _arPinch.startDist; // >1 => fingers spread => zoom out (move camera back)
+		var newZ = _arPinch.startZ * scale;
+		// clamp camera z to reasonable range
+		var minZ = 1;
+		var maxZ = 2000;
+		newZ = Math.max(minZ, Math.min(maxZ, newZ));
+		app.camera.position.z = newZ;
+		app.render();
+		evt.preventDefault();
+	}
+}
+
+function _onARTouchEnd(evt) {
+	if (!ARMode) return;
+	if (!evt.touches || evt.touches.length < 2) {
+		_arPinch.enabled = false;
+	}
+}
+
 function startARMode(position) {
 	ARMode = true;
 	app.camera.fov = Q3D.Config.AR.FOV;
@@ -207,6 +254,11 @@ function startARMode(position) {
 		alert(error);
 	});
 
+	// register pinch handlers (only in AR mode)
+	window.addEventListener('touchstart', _onARTouchStart, {passive:false});
+	window.addEventListener('touchmove', _onARTouchMove, {passive:false});
+	window.addEventListener('touchend', _onARTouchEnd, {passive:false});
+
 	document.querySelectorAll(".action-move").forEach(function (elm) {
 		elm.classList.toggle("hidden");
 	});
@@ -229,6 +281,11 @@ function moveHere() {
 
 function stopARMode() {
 	ARMode = false;
+
+	// remove AR pinch listeners
+	window.removeEventListener('touchstart', _onARTouchStart, {passive:false});
+	window.removeEventListener('touchmove', _onARTouchMove, {passive:false});
+	window.removeEventListener('touchend', _onARTouchEnd, {passive:false});
 
 	devControls.disconnect();
 
