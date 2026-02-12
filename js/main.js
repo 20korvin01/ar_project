@@ -1,3 +1,17 @@
+// Sidepanel toggle logic
+document.addEventListener("DOMContentLoaded", function() {
+  const sidepanel = document.getElementById("sidepanel");
+  const toggleBtn = document.getElementById("sidepanel-toggle");
+  if (sidepanel && toggleBtn) {
+    toggleBtn.addEventListener("click", function() {
+      const closed = sidepanel.classList.toggle("closed");
+      // Change icon direction
+      toggleBtn.innerHTML = closed ? "&#x2039;" : "&#x203A;";
+    });
+    // Set initial icon
+    toggleBtn.innerHTML = sidepanel.classList.contains("closed") ? "&#x2039;" : "&#x203A;";
+  }
+});
 const scenes = [
   { year: "2024", desktop: "html/2024_msh_NLCD.html", mobile: "html/2024_msh_NLCD_mobile.html" },
   { year: "2023", desktop: "html/2023_msh_NLCD.html", mobile: "html/2023_msh_NLCD_mobile.html" },
@@ -9,14 +23,13 @@ const scenes = [
 const yearSelect = document.getElementById("year");
 const viewer = document.getElementById("viewer");
 const note = document.getElementById("note");
-const modeButtons = Array.from(document.querySelectorAll(".mode button"));
 const landClassSelect = document.getElementById("land-class");
 const landClassChip = document.getElementById("land-class-chip");
 const landClassSearch = document.getElementById("land-class-search");
 const landClassLegendTitle = document.getElementById("land-class-legend-title");
 const landClassLegendDesc = document.getElementById("land-class-legend-desc");
 
-let mode = "auto";
+const mode = "auto";
 let landClassCache = [];
 const landClassHighlightTolerance = 0.18;
 
@@ -56,10 +69,6 @@ function updateNote(scene) {
   const missingMobile = scene && !scene.mobile;
   if (missingDesktop && missingMobile) {
     note.textContent = "No files available for this year.";
-  } else if (mode === "desktop" && missingDesktop) {
-    note.textContent = "Desktop file missing. Falling back to mobile.";
-  } else if (mode === "mobile" && missingMobile) {
-    note.textContent = "Mobile file missing. Falling back to desktop.";
   } else {
     note.textContent = "";
   }
@@ -72,13 +81,6 @@ function loadSelected() {
   if (file) viewer.src = file;
 }
 
-function setMode(newMode) {
-  mode = newMode;
-  modeButtons.forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.mode === newMode);
-  });
-  loadSelected();
-}
 
 function populateYears() {
   scenes.forEach(scene => {
@@ -146,10 +148,6 @@ function populateLandClasses() {
   landClassCache = Array.isArray(window.NLCD_COLORS) ? window.NLCD_COLORS : [];
   buildLandClassOptions(landClassSearch ? landClassSearch.value : "");
 }
-
-modeButtons.forEach(btn => {
-  btn.addEventListener("click", () => setMode(btn.dataset.mode));
-});
 
 yearSelect.addEventListener("change", loadSelected);
 if (landClassSelect) {

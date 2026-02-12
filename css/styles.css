@@ -1,3 +1,4 @@
+/* Sidepanel styles */
 :root {
   --bg: #f4f2ee;
   --panel: #ffffff;
@@ -6,6 +7,93 @@
   --accent: #005f73;
   --accent-2: #0a9396;
 }
+.sidepanel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 280px;
+  max-width: 90vw;
+  background: rgba(255,255,255,0.5);
+  box-shadow: 2px 0 24px rgba(0,0,0,0.13);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+  transform: translateX(0);
+  /* Ensure overflow is visible for toggle button */
+  overflow: visible;
+}
+.sidepanel.closed {
+    transform: translateX(-100%);
+  }
+  .sidepanel-content {
+    flex: 1 1 auto;
+    padding: 32px 18px 18px 18px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  #sidepanel-toggle {
+    position: absolute;
+    top: 18px;
+    left: 100%;
+    margin-left: -18px;
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    border: 2.5px solid var(--accent-2);
+    background: linear-gradient(135deg, var(--accent) 60%, var(--accent-2) 100%);
+    opacity: 0.85;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+    color: #fff;
+    font-size: 2.2em;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 11;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, left 0.3s, box-shadow 0.2s;
+    outline: none;
+  }
+  #sidepanel-toggle:focus {
+    outline: 2px solid var(--accent-2);
+    background: linear-gradient(135deg, var(--accent-2) 60%, var(--accent) 100%);
+    opacity: 0.85;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.18);
+    color: #fff;
+    /* Ensure dropdowns fit panel width */
+    /* Applies to selects inside the sidepanel only */
+  }
+  .sidepanel-content select {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+  .sidepanel.closed #sidepanel-toggle {
+    left: 100%;
+    margin-left: -18px;
+    transform: rotate(180deg);
+  }
+
+  /* Adjust frameWrap to make space for sidepanel */
+  #frameWrap {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    height: 100vh;
+    padding: 0;
+    transition: margin-left 0.3s cubic-bezier(.4,0,.2,1);
+    margin-left: 280px;
+  }
+  .sidepanel.closed ~ #frameWrap {
+    margin-left: 0;
+  }
 * { box-sizing: border-box; }
 html, body { height: 100%; }
 body {
@@ -99,13 +187,17 @@ select, button {
 }
 iframe {
   width: 100%;
-  height: 100%;
+  height: 100vh;
   border: 0;
   border-radius: 10px;
   background: #000;
   box-shadow: 0 6px 24px rgba(0,0,0,0.12);
 }
 @media (max-width: 720px) {
+    #sidepanel-toggle, .sidepanel.closed #sidepanel-toggle {
+      left: 100%;
+      margin-left: -18px;
+    }
   .viewer-controls {
     top: 8px;
     left: 50%;
@@ -118,5 +210,16 @@ iframe {
   .land-class-row {
     flex-direction: column;
     align-items: stretch;
+  }
+  .sidepanel {
+    width: 90vw;
+    min-width: 0;
+    max-width: 100vw;
+  }
+  #frameWrap, .sidepanel.closed ~ #frameWrap {
+    margin-left: 0;
+  }
+  .sidepanel-content {
+    padding: 24px 8px 8px 8px;
   }
 }

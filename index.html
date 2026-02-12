@@ -7,31 +7,22 @@
 <link rel="stylesheet" href="./css/styles.css">
 </head>
 <body>
-<div id="frameWrap">
-  <div class="viewer-controls" role="region" aria-label="Viewer controls">
-    <div>
-      <label for="year">Year</label><br>
-      <select id="year"></select>
-    </div>
-    <div>
-      <label>Mode</label><br>
-      <div class="mode" role="group" aria-label="Mode">
-        <button type="button" data-mode="auto" class="active">Auto</button>
-        <button type="button" data-mode="desktop">Desktop</button>
-        <button type="button" data-mode="mobile">Mobile</button>
-      </div>
-    </div>
-    <div>
-      <label for="land-class">Land class</label><br>
-      <div class="land-class-row">
-        <div class="select-with-chip">
-          <span class="color-chip" id="land-class-chip" aria-hidden="true"></span>
-          <select id="land-class"></select>
-        </div>
+<div id="sidepanel" class="sidepanel closed">
+  <button id="sidepanel-toggle" aria-label="Open/Close Panel">&#x203A;</button>
+  <div class="sidepanel-content">
+    <label for="year">Year</label>
+    <select id="year"></select>
+    <label for="land-class">Land Class</label>
+    <div class="land-class-row">
+      <div class="select-with-chip">
+        <span class="color-chip" id="land-class-chip" aria-hidden="true"></span>
+        <select id="land-class"></select>
       </div>
     </div>
     <div class="note" id="note"></div>
   </div>
+</div>
+<div id="frameWrap">
   <iframe id="viewer" allow="camera; geolocation; autoplay; fullscreen"></iframe>
 </div>
 <script src="./colors.js" defer></script>
