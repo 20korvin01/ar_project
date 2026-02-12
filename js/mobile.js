@@ -215,6 +215,62 @@ function _onARTouchEnd(evt) {
 	}
 }
 
+// --- PointerEvent fallback for environments that use Pointer API (pointerdown/pointermove/pointerup)
+var _arPointer = {
+	pointers: {},
+	startDist: 0,
+	startZ: 0,
+	enabled: false
+};
+
+function _pointerDistance(p1, p2) {
+	var dx = p1.x - p2.x;
+	var dy = p1.y - p2.y;
+	return Math.sqrt(dx * dx + dy * dy);
+}
+
+function _onARPointerDown(evt) {
+	if (!ARMode) return;
+	_arPointer.pointers[evt.pointerId] = { x: evt.clientX, y: evt.clientY };
+	if (Object.keys(_arPointer.pointers).length === 2) {
+		var keys = Object.keys(_arPointer.pointers);
+		var a = _arPointer.pointers[keys[0]];
+		var b = _arPointer.pointers[keys[1]];
+		_arPointer.startDist = _pointerDistance(a, b);
+		_arPointer.startZ = app.camera.position.z;
+		_arPointer.enabled = true;
+		evt.preventDefault();
+	}
+}
+
+function _onARPointerMove(evt) {
+	if (!ARMode || !_arPointer.enabled) return;
+	if (!(evt.pointerId in _arPointer.pointers)) return;
+	_arPointer.pointers[evt.pointerId] = { x: evt.clientX, y: evt.clientY };
+	var keys = Object.keys(_arPointer.pointers);
+	if (keys.length !== 2) return;
+	var a = _arPointer.pointers[keys[0]];
+	var b = _arPointer.pointers[keys[1]];
+	var cur = _pointerDistance(a, b);
+	if (_arPointer.startDist <= 0) return;
+	var scale = cur / _arPointer.startDist;
+	var newZ = _arPointer.startZ * scale;
+	var minZ = 1;
+	var maxZ = 2000;
+	newZ = Math.max(minZ, Math.min(maxZ, newZ));
+	app.camera.position.z = newZ;
+	app.render();
+	evt.preventDefault();
+}
+
+function _onARPointerUp(evt) {
+	if (!ARMode) return;
+	delete _arPointer.pointers[evt.pointerId];
+	if (Object.keys(_arPointer.pointers).length < 2) {
+		_arPointer.enabled = false;
+	}
+}
+
 function startARMode(position) {
 	ARMode = true;
 	app.camera.fov = Q3D.Config.AR.FOV;
@@ -258,6 +314,11 @@ function startARMode(position) {
 	window.addEventListener('touchstart', _onARTouchStart, {passive:false});
 	window.addEventListener('touchmove', _onARTouchMove, {passive:false});
 	window.addEventListener('touchend', _onARTouchEnd, {passive:false});
+	// PointerEvent fallback (some browsers/devices use Pointer API)
+	window.addEventListener('pointerdown', _onARPointerDown, {passive:false});
+	window.addEventListener('pointermove', _onARPointerMove, {passive:false});
+	window.addEventListener('pointerup', _onARPointerUp, {passive:false});
+	window.addEventListener('pointercancel', _onARPointerUp, {passive:false});
 
 	document.querySelectorAll(".action-move").forEach(function (elm) {
 		elm.classList.toggle("hidden");
@@ -286,6 +347,11 @@ function stopARMode() {
 	window.removeEventListener('touchstart', _onARTouchStart, {passive:false});
 	window.removeEventListener('touchmove', _onARTouchMove, {passive:false});
 	window.removeEventListener('touchend', _onARTouchEnd, {passive:false});
+	// remove PointerEvent listeners as well
+	window.removeEventListener('pointerdown', _onARPointerDown, {passive:false});
+	window.removeEventListener('pointermove', _onARPointerMove, {passive:false});
+	window.removeEventListener('pointerup', _onARPointerUp, {passive:false});
+	window.removeEventListener('pointercancel', _onARPointerUp, {passive:false});
 
 	devControls.disconnect();
 
