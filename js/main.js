@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", function() {
 const scenes = [];
 const htmlFiles = [
   "1978_pre_eruption.html",
-  "1986.html","1987.html","1988.html","1989.html","1990.html","1991.html","1992.html","1993.html","1994.html","1995.html","1996.html","1997.html","1998.html","1999.html","2000.html","2001.html","2002.html","2003.html","2004.html","2005.html","2006.html","2007.html","2008.html","2009.html","2010.html","2011.html","2012.html","2013.html","2014.html","2015.html","2016.html","2017.html","2018.html","2019.html","2020.html","2021.html","2022.html","2023.html","2024.html"
+  "1986.html","1987.html","1988.html","1989.html","1990.html","1991.html","1992.html","1993.html","1994.html","1995.html","1996.html","1997.html","1998.html","1999.html","2000.html","2001.html","2002.html","2003.html","2004.html","2005.html","2006.html","2007.html","2008.html","2009.html","2010.html","2011.html","2012.html","2013.html","2014.html","2015.html","2016.html","2017.html","2018.html","2019.html","2020.html","2021.html","2022.html","2023.html","2024.html","2026_satellite.html"
 ];
 htmlFiles.forEach(f => {
   let year = f.replace('.html', '');
@@ -110,7 +110,7 @@ function updateLandClassChip() {
   if (landClassSelect.disabled) {
     landClassChip.style.backgroundColor = "transparent";
     landClassChip.style.borderColor = "#bbb";
-    landClassChip.title = "Land class highlighting disabled for 1978 pre-eruption";
+    landClassChip.title = "Land class highlighting disabled for this scene";
     return;
   }
 
@@ -127,7 +127,7 @@ function updateLandClassLegend() {
   // If disabled for the selected scene, show unavailable message
   if (landClassSelect.disabled) {
     landClassLegendTitle.textContent = "Not available";
-    landClassLegendDesc.textContent = "Land class highlighting is disabled for 1978 pre-eruption.";
+    landClassLegendDesc.textContent = "Land class highlighting is disabled for this scene.";
     return;
   }
 
@@ -146,7 +146,8 @@ function updateLandClassLegend() {
 
 function updateLandClassAvailability() {
   if (!landClassSelect || !yearSelect) return;
-  const disabled = yearSelect.value === "1978_pre_eruption";
+  // disable for specific scenes (e.g. 1978 pre-eruption and 2026 satellite)
+  const disabled = yearSelect.value === "1978_pre_eruption" || yearSelect.value === "2026_satellite";
 
   // disable/enable controls
   landClassSelect.disabled = disabled;
@@ -161,7 +162,7 @@ function updateLandClassAvailability() {
     if (disabled) {
       viewer.contentWindow.postMessage({ type: "nlcd:highlight", enabled: false, color: null, tolerance: landClassHighlightTolerance }, "*");
     } else {
-      // re-apply currently selected highlight for non-1978 scenes
+      // re-apply currently selected highlight for enabled scenes
       sendLandClassHighlight();
     }
   }
