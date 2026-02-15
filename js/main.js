@@ -41,6 +41,12 @@ const landClassHighlightTolerance = 0.18;
 function sendLandClassHighlight() {
   if (!viewer || !viewer.contentWindow || !landClassSelect) return;
 
+  // If dropdown is disabled (e.g. pre-eruption), explicitly clear highlight in iframe
+  if (landClassSelect.disabled) {
+    viewer.contentWindow.postMessage({ type: "nlcd:highlight", enabled: false, color: null, tolerance: landClassHighlightTolerance }, "*");
+    return;
+  }
+
   const selected = landClassSelect.options[landClassSelect.selectedIndex];
   const enabled = selected && selected.value !== "all";
   const color = selected ? selected.dataset.color : null;
@@ -77,6 +83,10 @@ function updateNote(scene) {
 
 function loadSelected() {
   const scene = getScene(yearSelect.value);
+
+  // enable/disable land-class UI immediately based on selected scene
+  updateLandClassAvailability();
+
   const file = pickFile(scene);
   updateNote(scene);
   if (file) viewer.src = file;
@@ -95,14 +105,32 @@ function populateYears() {
 
 function updateLandClassChip() {
   if (!landClassSelect || !landClassChip) return;
+
+  // When dropdown is disabled, show neutral chip
+  if (landClassSelect.disabled) {
+    landClassChip.style.backgroundColor = "transparent";
+    landClassChip.style.borderColor = "#bbb";
+    landClassChip.title = "Land class highlighting disabled for 1978 pre-eruption";
+    return;
+  }
+
   const selected = landClassSelect.options[landClassSelect.selectedIndex];
   const color = selected ? selected.dataset.color : null;
   landClassChip.style.backgroundColor = color || "transparent";
   landClassChip.style.borderColor = color ? "#777" : "#bbb";
+  landClassChip.title = selected ? selected.textContent : "";
 }
 
 function updateLandClassLegend() {
   if (!landClassSelect || !landClassLegendTitle || !landClassLegendDesc) return;
+
+  // If disabled for the selected scene, show unavailable message
+  if (landClassSelect.disabled) {
+    landClassLegendTitle.textContent = "Not available";
+    landClassLegendDesc.textContent = "Land class highlighting is disabled for 1978 pre-eruption.";
+    return;
+  }
+
   const selected = landClassSelect.options[landClassSelect.selectedIndex];
   if (!selected || selected.value === "all") {
     landClassLegendTitle.textContent = "All classes";
@@ -114,6 +142,29 @@ function updateLandClassLegend() {
   const item = landClassCache.find(entry => entry.code === code);
   landClassLegendTitle.textContent = selected.textContent || "";
   landClassLegendDesc.textContent = item && item.category ? item.category : "";
+}
+
+function updateLandClassAvailability() {
+  if (!landClassSelect || !yearSelect) return;
+  const disabled = yearSelect.value === "1978_pre_eruption";
+
+  // disable/enable controls
+  landClassSelect.disabled = disabled;
+  if (landClassSearch) landClassSearch.disabled = disabled;
+
+  // update UI widgets
+  updateLandClassChip();
+  updateLandClassLegend();
+
+  // ensure iframe highlight state matches availability
+  if (viewer && viewer.contentWindow) {
+    if (disabled) {
+      viewer.contentWindow.postMessage({ type: "nlcd:highlight", enabled: false, color: null, tolerance: landClassHighlightTolerance }, "*");
+    } else {
+      // re-apply currently selected highlight for non-1978 scenes
+      sendLandClassHighlight();
+    }
+  }
 }
 
 function buildLandClassOptions(filterText) {
@@ -135,6 +186,19 @@ function buildLandClassOptions(filterText) {
     option.textContent = `${item.land_cover} (${item.code})`;
     option.dataset.color = item.color;
     if (item.category) option.title = item.category;
+
+    // color only the option text (font color)
+    // - force Snow/Ice (NLCD code 12) to black for readability
+    // - all other classes use their NLCD color as text color
+    try {
+      const isSnow = item.code === 12 || /snow|ice/i.test(item.land_cover);
+      const textColor = isSnow ? '#000' : (item.color || '#000');
+      option.style.color = textColor;
+      option.style.fontWeight = '500';
+    } catch (e) {
+      /* some browsers restrict styling <option> — ignore */
+    }
+
     landClassSelect.appendChild(option);
   });
 
@@ -148,6 +212,12 @@ function populateLandClasses() {
   if (!landClassSelect) return;
   landClassCache = Array.isArray(window.NLCD_COLORS) ? window.NLCD_COLORS : [];
   buildLandClassOptions(landClassSearch ? landClassSearch.value : "");
+  // ensure dropdown enabled/disabled state matches the currently selected year
+  updateLandClassAvailability();
+  // ensure dropdown enabled/disabled state matches the currently selected year
+  updateLandClassAvailability();
+  // ensure dropdown enabled/disabled state matches the currently selected year
+  updateLandClassAvailability();
 }
 
 yearSelect.addEventListener("change", loadSelected);
