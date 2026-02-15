@@ -84,6 +84,7 @@
   }
 
   function setHighlight(payload) {
+    console.debug('[nlcd] setHighlight', payload);
     if (!payload || payload.type !== "nlcd:highlight") return;
 
     if (payload.enabled && payload.color) {
@@ -98,6 +99,7 @@
     }
 
     applyHighlightToScene();
+    console.debug('[nlcd] state', state);
   }
 
   window.addEventListener("message", function (event) {
