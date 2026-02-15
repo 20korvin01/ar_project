@@ -4,7 +4,7 @@
 "use strict";
 
 Q3D.Config.AR = {
-	DH: 1.5,      // device height from ground (in CRS vertical unit)
+	DH: 0.0,      // device height from ground (in CRS vertical unit) — 0 = on the ground
 	FOV: 70,      // device camera's field of view
 	MND: 0        // magnetic North direction (clockwise from upper direction of map, in degrees)
 };
@@ -174,7 +174,12 @@ function startARMode(position) {
 	app.camera.updateProjectionMatrix();
 
 	if (typeof position === "undefined") {
-		app.camera.position.set(0, 0, 30);
+		// place camera at ground level (use AR.DH * zScale) so model appears on the ground
+		var groundZ = 0;
+		if (app.scene && app.scene.userData && typeof app.scene.userData.zScale === 'number') {
+			groundZ = Q3D.Config.AR.DH * app.scene.userData.zScale;
+		}
+		app.camera.position.set(0, 0, groundZ);
 		Q3D.E("current-location").classList.add("touchme");
 	}
 	else {
