@@ -457,6 +457,9 @@ Q3D.E = function (id) {
 		if (jsonObject.animation !== undefined) app.animation.keyframes.load(jsonObject.animation.groups);
 	};
 
+	// backward compatibility: some generated scene files call `app.loadData(...)`
+	app.loadData = app.loadJSONObject;
+
 	app.loadJSONFile = function (url, callback) {
 		app.loadFile(url, "json", function (obj) {
 			app.loadJSONObject(obj);
@@ -2457,6 +2460,30 @@ class Q3DDEMBlock extends Q3DDEMBlockBase {
 				buildGeometry(grid.array);
 			});
 		}
+		else if (grid.base64 !== undefined) {
+			// Support for base64-encoded DEM data
+			var b64 = grid.base64;
+			// Remove data: prefix if present
+			if (b64.indexOf(",") !== -1) b64 = b64.split(",")[1];
+			var raw = atob(b64);
+			var len = raw.length / 4;
+			var arr = new Float32Array(len);
+			for (var i = 0; i < len; i++) {
+				// Little-endian float32
+				var b0 = raw.charCodeAt(i * 4);
+				var b1 = raw.charCodeAt(i * 4 + 1);
+				var b2 = raw.charCodeAt(i * 4 + 2);
+				var b3 = raw.charCodeAt(i * 4 + 3);
+				var view = new DataView(new ArrayBuffer(4));
+				view.setUint8(0, b0);
+				view.setUint8(1, b1);
+				view.setUint8(2, b2);
+				view.setUint8(3, b3);
+				arr[i] = view.getFloat32(0, true);
+			}
+			grid.array = arr;
+			buildGeometry(grid.array);
+		}
 		else {
 			if (grid.binary !== undefined) {
 				// WebKit Bridge
@@ -2836,12 +2863,13 @@ class Q3DMapLayer extends THREE.EventDispatcher {
 				this.visible = (jsonObject.properties.visible || Q3D.Config.allVisible) ? true : false;
 			}
 
-			if (jsonObject.data !== undefined) {
+			var _data = jsonObject.data || jsonObject.body;
+			if (_data !== undefined) {
 				this.clearObjects();
 
 				// materials
-				if (jsonObject.data.materials !== undefined) {
-					this.materials.loadJSONObject(jsonObject.data.materials);
+				if (_data.materials !== undefined) {
+					this.materials.loadJSONObject(_data.materials);
 				}
 			}
 
@@ -2937,8 +2965,9 @@ class Q3DDEMLayer extends Q3DMapLayer {
 			}
 			this.objectGroup.updateMatrixWorld();
 
-			if (jsonObject.data !== undefined) {
-				jsonObject.data.forEach(function (obj) {
+			var _blocks = jsonObject.data || (jsonObject.body && jsonObject.body.blocks);
+			if (_blocks !== undefined) {
+				_blocks.forEach(function (obj) {
 					this.buildBlock(obj, scene, this);
 				}, this);
 			}
@@ -3393,7 +3422,8 @@ class Q3DVectorLayer extends Q3DMapLayer {
 	loadJSONObject(jsonObject, scene) {
 		super.loadJSONObject(jsonObject, scene);
 		if (jsonObject.type == "layer") {
-			if (jsonObject.data !== undefined) {
+			var _d = jsonObject.data || jsonObject.body;
+		if (_d !== undefined) {
 				this.features = [];
 				this.clearLabels();
 
@@ -3415,7 +3445,8 @@ class Q3DVectorLayer extends Q3DMapLayer {
 					}
 				}
 
-				(jsonObject.data.blocks || []).forEach(function (block) {
+				var _blocks = ((jsonObject.data && jsonObject.data.blocks) || (jsonObject.body && jsonObject.body.blocks) || jsonObject.data || jsonObject.body || []);
+				_blocks.forEach(function (block) {
 					if (block.url !== undefined) Q3D.application.loadJSONFile(block.url);
 					else {
 						this.build(block.features, block.startIndex);
@@ -3455,7 +3486,8 @@ class Q3DPointLayer extends Q3DVectorLayer {
 	}
 
 	loadJSONObject(jsonObject, scene) {
-		if (jsonObject.type == "layer" && jsonObject.properties.objType == "3D Model" && jsonObject.data !== undefined) {
+		var _data = jsonObject.data || jsonObject.body;
+			if (jsonObject.type == "layer" && jsonObject.properties.objType == "3D Model" && _data !== undefined) {
 			if (this.models === undefined) {
 				var _this = this;
 
@@ -3468,7 +3500,7 @@ class Q3DPointLayer extends Q3DVectorLayer {
 			else {
 				this.models.clear();
 			}
-			this.models.loadJSONObject(jsonObject.data.models);
+			this.models.loadJSONObject((_data.models !== undefined) ? _data.models : _data);
 		}
 
 		super.loadJSONObject(jsonObject, scene);

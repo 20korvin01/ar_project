@@ -12,13 +12,18 @@ document.addEventListener("DOMContentLoaded", function() {
     toggleBtn.innerHTML = sidepanel.classList.contains("closed") ? "&#x2039;" : "&#x203A;";
   }
 });
-const scenes = [
-  { year: "2024", desktop: "html/2024_msh_NLCD.html", mobile: "html/2024_msh_NLCD_mobile.html" },
-  { year: "2023", desktop: "html/2023_msh_NLCD.html", mobile: "html/2023_msh_NLCD_mobile.html" },
-  { year: "2022", desktop: "html/2022_msh_NLCD.html", mobile: "html/2022_msh_NLCD_mobile.html" },
-  { year: "2021", mobile: "html/2021_msh_NLCD_mobile.html" },
-  { year: "2020", desktop: "html/2020_msh_NLCD.html" }
+// Dynamisch alle Jahre aus dem html-Ordner erfassen
+// Annahme: Jede Datei heißt z.B. 1986.html, 1978_pre_eruption.html usw.
+// scenes = [{ year: "1986", file: "html/1986.html" }, ...]
+const scenes = [];
+const htmlFiles = [
+  "1978_pre_eruption.html",
+  "1986.html","1987.html","1988.html","1989.html","1990.html","1991.html","1992.html","1993.html","1994.html","1995.html","1996.html","1997.html","1998.html","1999.html","2000.html","2001.html","2002.html","2003.html","2004.html","2005.html","2006.html","2007.html","2008.html","2009.html","2010.html","2011.html","2012.html","2013.html","2014.html","2015.html","2016.html","2017.html","2018.html","2019.html","2020.html","2021.html","2022.html","2023.html","2024.html"
 ];
+htmlFiles.forEach(f => {
+  let year = f.replace('.html', '');
+  scenes.push({ year: year, file: `html/${f}` });
+});
 
 const yearSelect = document.getElementById("year");
 const viewer = document.getElementById("viewer");
@@ -59,16 +64,12 @@ function getScene(year) {
 
 function pickFile(scene) {
   if (!scene) return null;
-  if (mode === "desktop") return scene.desktop || scene.mobile || null;
-  if (mode === "mobile") return scene.mobile || scene.desktop || null;
-  return isMobile() ? (scene.mobile || scene.desktop || null) : (scene.desktop || scene.mobile || null);
+  return scene.file;
 }
 
 function updateNote(scene) {
-  const missingDesktop = scene && !scene.desktop;
-  const missingMobile = scene && !scene.mobile;
-  if (missingDesktop && missingMobile) {
-    note.textContent = "No files available for this year.";
+  if (!scene) {
+    note.textContent = "No file available for this year.";
   } else {
     note.textContent = "";
   }
@@ -165,6 +166,8 @@ if (landClassSearch) {
 window.addEventListener("resize", () => { if (mode === "auto") loadSelected(); });
 viewer.addEventListener("load", () => {
   sendLandClassHighlight();
+
+  
 });
 
 populateYears();
